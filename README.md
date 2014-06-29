@@ -30,12 +30,12 @@ ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
 
 VirtualBox is used to run the Docker host. It can be installed via the GUI installer found [here](https://www.virtualbox.org/wiki/Downloads). There is also a way to install VirtualBox via a tool called [Cask](http://caskroom.io). That will not be covered in this guide.
 
-### Boot2Docker and Docker
+### Docker and Boot2Docker
 
-Boot2Docker provides a convenient way to create a linux-based Docker host. This will be used to run our Docker containers since they cannot run natively on OS X. ([alternative installation](https://github.com/boot2docker/osx-installer/releases))
+Boot2Docker provides a convenient way to create a linux-based Docker host. This will be used to run our Docker containers since they cannot run natively on OS X. ([alternative installation](https://docs.docker.com/installation/mac))
 
 ```bash
-brew install boot2docker
+brew install docker boot2docker
 ```
 
 A helper function has been provided called `docker-host` in the repository. This will aid in the managing of the Docker host. Boot2Docker already provides useful command line control, but this command will assist with setting a necessary environment variable needed for Docker to work. Source this in your `~/.bashrc` for convenience.
@@ -45,10 +45,6 @@ docker-host help
 ```
 
 **_When the Docker host is destroyed, any downloaded Docker images are also destroyed. For example, if you did a_** `docker pull centos` **_and then destroyed the Docker host, you would have to pull the CentOS repository again._**
-
-```bash
-brew install docker
-```
 
 ### Test Installation
 
