@@ -1,0 +1,136 @@
+# This needs to be a set of functions because we need
+# to export DOCKER_HOST. Unfortunately this cannot be done
+# if this is a standalone script.
+
+function __docker-host-usage {
+  local script_name
+  script_name=${1:-docker-host}
+  cat <<EOT
+Usage: ${script_name} [action]
+
+* ${script_name} [no action] | prepare | start | up
+  makes sure boot2docker is initialized, started, and \$DOCKER_HOST is set
+
+* ${script_name} upgrade
+  stops, downloads, and starts boot2docker VM
+
+* ${script_name} hard-upgrade
+  deletes, dowloads, and initializes, and starts a new boot2docker VM
+  This is useful if your boot2docker VM was created prior to 0.11.1-pre1
+
+* ${script_name} destroy | delete
+  deletes boot2docker VM
+
+* ${script_name} stop | down
+  stops boot2docker VM
+
+* ${script_name} help
+  displays this screen
+
+Further help with boot2docker can be found at:
+https://github.com/boot2docker/boot2docker
+EOT
+}
+
+function __docker-host-export {
+  local host_ip="$(boot2docker ip 2>/dev/null)"
+  if [[ $host_ip ]]; then
+    export DOCKER_HOST="tcp://${host_ip}:2375"
+    echo "DOCKER_HOST set to ${DOCKER_HOST}"
+  else
+    echo "There was a problem finding the boot2docker VM ip address!" >&2
+    echo "Diagnose by running: boot2docker ip" >&2
+    return 1
+  fi
+}
+
+function __docker-host-unset {
+  unset DOCKER_HOST
+  echo "DOCKER_HOST cleared"  
+}
+
+function __docker-host-prepare {
+  local docker_status
+  docker_status="$(boot2docker status 2>/dev/null)"
+  if [[ $docker_status != running ]]; then
+    echo 'boot2docker init'
+    boot2docker init > /dev/null 2>&1
+    echo 'boot2docker up'
+    boot2docker up > /dev/null 2>&1
+  fi
+  __docker-host-export
+}
+
+function __docker-host-upgrade {
+  echo 'boot2docker stop'
+  boot2docker stop > /dev/null 2>&1
+  echo 'boot2docker download'
+  boot2docker download > /dev/null 2>&1
+  echo 'boot2docker up'
+  boot2docker up > /dev/null 2>&1
+  __docker-host-export
+}
+
+function __docker-host-hard-upgrade {
+  echo 'boot2docker delete'
+  boot2docker delete > /dev/null 2>&1
+  echo 'boot2docker download'
+  boot2docker download > /dev/null 2>&1
+  echo 'boot2docker init'
+  boot2docker init > /dev/null 2>&1
+  echo 'boot2docker up'
+  boot2docker up > /dev/null 2>&1
+  __docker-host-export
+}
+
+function __docker-host-destroy {
+  echo 'boot2docker delete'
+  boot2docker delete > /dev/null 2>&1
+  __docker-host-unset
+}
+
+function __docker-host-stop {
+  echo 'boot2docker stop'
+  boot2docker stop > /dev/null 2>&1
+  __docker-host-unset
+}
+
+function docker-host {
+  local dependencies=(
+    'boot2docker'
+  )
+
+  for d in "${dependencies[@]}"; do
+    if ! hash "${d}" 2>/dev/null; then
+      echo "${d}: dependency not found" >&2
+      return 1
+    fi
+  done
+
+  case $1 in
+    ''|prepare|up|start)
+      __docker-host-prepare
+    ;;
+    upgrade)
+      __docker-host-upgrade
+    ;;
+    hard-upgrade)
+      __docker-host-hard-upgrade
+    ;;
+    delete|destroy)
+      __docker-host-destroy
+    ;;
+    stop|down)
+      __docker-host-stop
+    ;;
+    help)
+      __docker-host-usage "${FUNCNAME}"
+    ;;
+    *)
+      echo "Unrecognized option: $1" >&2
+      echo
+      ${FUNCNAME} help
+      return 1
+    ;;
+  esac
+}
