@@ -32,11 +32,11 @@ https://github.com/boot2docker/boot2docker
 EOT
 }
 
-function __docker-host-export {
-  local host_ip="$(boot2docker ip 2>/dev/null)"
-  if [[ $host_ip ]]; then
-    export DOCKER_HOST="tcp://${host_ip}:2375"
-    echo "DOCKER_HOST set to ${DOCKER_HOST}"
+function __docker-host-shellinit {
+  if boot2docker ip > /dev/null 2>&1; then
+    echo 'boot2docker shellinit'
+    $(boot2docker shellinit 2>/dev/null)
+    echo "DOCKER_HOST=$DOCKER_HOST"
   else
     echo "There was a problem finding the boot2docker VM ip address!" >&2
     echo "Diagnose by running: boot2docker ip" >&2
@@ -45,8 +45,7 @@ function __docker-host-export {
 }
 
 function __docker-host-unset {
-  unset DOCKER_HOST
-  echo "DOCKER_HOST cleared"  
+  unset DOCKER_HOST DOCKER_CERT_PATH DOCKER_TLS_VERIFY
 }
 
 function __docker-host-prepare {
@@ -58,7 +57,7 @@ function __docker-host-prepare {
     echo 'boot2docker up'
     boot2docker up > /dev/null 2>&1
   fi
-  __docker-host-export
+  __docker-host-shellinit
 }
 
 function __docker-host-upgrade {
@@ -68,7 +67,7 @@ function __docker-host-upgrade {
   boot2docker download > /dev/null 2>&1
   echo 'boot2docker up'
   boot2docker up > /dev/null 2>&1
-  __docker-host-export
+  __docker-host-shellinit
 }
 
 function __docker-host-hard-upgrade {
@@ -80,7 +79,7 @@ function __docker-host-hard-upgrade {
   boot2docker init > /dev/null 2>&1
   echo 'boot2docker up'
   boot2docker up > /dev/null 2>&1
-  __docker-host-export
+  __docker-host-shellinit
 }
 
 function __docker-host-destroy {
