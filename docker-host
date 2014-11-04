@@ -15,7 +15,7 @@ Usage: ${script_name} [action]
   stops, downloads, and starts boot2docker VM
 
 * ${script_name} hard-upgrade
-  deletes, dowloads, and initializes, and starts a new boot2docker VM
+  deletes, dowloads, initializes, and starts a new boot2docker VM
   This is useful if your boot2docker VM was created prior to 0.11.1-pre1
 
 * ${script_name} destroy | delete
